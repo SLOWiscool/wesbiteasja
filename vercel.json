@@ -1,5 +1,15 @@
 {
-    "rewrites": [
-        { "source": "/welcome", "destination": "/welcome.html" }
+    "version": 2,
+    "builds": [
+        { "src": "index.html", "use": "@vercel/static" },
+        { "src": "admin.html", "use": "@vercel/static" },
+        { "src": "welcome.html", "use": "@vercel/static" },
+        { "src": "api/**/*.js", "use": "@vercel/node" }
+    ],
+    "routes": [
+        { "src": "/api/(.*)", "dest": "/api/$1" },
+        { "src": "/admin", "dest": "/admin.html" },
+        { "src": "/welcome", "dest": "/welcome.html" },
+        { "src": "/(.*)", "dest": "/index.html" }
     ]
 }
