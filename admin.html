@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - IP Verification</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #0f0f1a;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+        h1 { margin-bottom: 20px; color: #4CAF50; }
+        .pending-list { display: flex; flex-direction: column; gap: 12px; }
+        .pending-card {
+            background: #1a1a2e;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 16px;
+        }
+        .pending-card h3 { color: #fff; margin-bottom: 8px; }
+        .pending-card .time { color: #888; font-size: 12px; margin-bottom: 12px; }
+        .headers-toggle { margin: 10px 0; }
+        .headers-toggle summary { cursor: pointer; color: #888; font-size: 13px; }
+        .headers-detail {
+            background: #0f0f1a;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 8px;
+            font-size: 12px;
+            overflow-x: auto;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .headers-detail pre { margin: 0; white-space: pre-wrap; word-break: break-all; }
+        .btn-group { display: flex; gap: 10px; margin-top: 12px; }
+        button {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .approve { background: #4CAF50; color: #fff; }
+        .approve:hover { background: #45a049; }
+        .deny { background: #f44336; color: #fff; }
+        .deny:hover { background: #da190b; }
+        .empty { text-align: center; color: #555; padding: 40px; }
+        .refresh-btn { background: #2196F3; color: #fff; margin-bottom: 20px; }
+        .refresh-btn:hover { background: #1976D2; }
+    </style>
+</head>
+<body>
+    <h1>IP Verification Admin</h1>
+    <button class="refresh-btn" onclick="loadPending()">Refresh</button>
+    <div id="pending" class="pending-list">
+        <div class="empty">Loading...</div>
+    </div>
+
+    <script>
+        async function loadPending() {
+            const res = await fetch('/api/pending');
+            const data = await res.json();
+            const container = document.getElementById('pending');
+
+            if (data.length === 0) {
+                container.innerHTML = '<div class="empty">No pending requests</div>';
+                return;
+            }
+
+            container.innerHTML = data.map(entry => `
+                <div class="pending-card" id="card-${entry.ip}">
+                    <h3>${entry.ip}</h3>
+                    <div class="time">${new Date(entry.timestamp).toLocaleString()}</div>
+                    <details class="headers-toggle">
+                        <summary>View Headers</summary>
+                        <div class="headers-detail">
+                            <pre>${JSON.stringify(entry.headers, null, 2)}</pre>
+                        </div>
+                    </details>
+                    <div class="btn-group">
+                        <button class="approve" onclick="approve('${entry.ip}')">Approve</button>
+                        <button class="deny" onclick="deny('${entry.ip}')">Deny</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function approve(ip) {
+            await fetch('/api/approve', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ip })
+            });
+            loadPending();
+        }
+
+        async function deny(ip) {
+            await fetch('/api/deny', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ip })
+            });
+            loadPending();
+        }
+
+        loadPending();
+        setInterval(loadPending, 5000);
+    </script>
+</body>
+</html>
