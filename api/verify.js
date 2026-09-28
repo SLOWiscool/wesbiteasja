@@ -1,5 +1,7 @@
-import fs from 'fs';
-import path from 'path';
+const db = {
+    approvedIPs: [],
+    redirectUrl: "/welcome"
+};
 
 export default function handler(req, res) {
     if (req.method !== 'POST') {
@@ -8,13 +10,15 @@ export default function handler(req, res) {
 
     const { ip, headers } = req.body;
 
-    const dbPath = path.join(process.cwd(), 'db.json');
-    const db = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
+    console.log(`[VERIFY] IP: ${ip}`);
+    console.log(`[VERIFY] Headers:`, JSON.stringify(headers));
+    console.log(`[VERIFY] Approved list:`, db.approvedIPs);
 
     const isApproved = db.approvedIPs.includes(ip);
+    console.log(`[VERIFY] Result: ${isApproved ? 'ALLOWED' : 'DENIED'}`);
 
     if (isApproved) {
-        return res.status(200).json({ allowed: true, redirectUrl: db.redirectUrl || '/welcome' });
+        return res.status(200).json({ allowed: true, redirectUrl: db.redirectUrl });
     }
 
     return res.status(200).json({ allowed: false });
